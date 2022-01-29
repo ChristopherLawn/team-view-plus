@@ -1,54 +1,34 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const db = require('./db/connection');
+const base = require('./db')
 require('console.table');
 
 let departments = [];
 let roles = [];
 let employees = [];
 
-db.connect(async (err) => {
-    if (err) throw err;
-    departments = await getDepts();
-    roles = await getRoles();
-    employees = await getEmployees();
-    setTimeout(mainMenu, 400);
-})
+mainMenu()
 
 function getDepts() {
-    return new Promise((resolve) => {
-        db.query("SELECT * FROM department", (err, values) => {
-            if (err) {
-                throw err;
-            }
-            resolve(values);
-        })
-    })
+    base.findAllDepartments().then(([depts]) => {
+        console.table(depts)
+    }).then(() => mainMenu())
 };
 
 function getRoles() {
-    return new Promise((resolve) => {
-        db.query("SELECT * FROM role", (err, values) => {
-            if (err) {
-                throw err;
-            }
-            resolve(values);
-        })
-    })
+    base.findAllRoles().then(([roles]) => {
+        console.table(roles)
+    }).then(() => mainMenu())
 };
 
 function getEmployees() {
-    return new Promise((resolve) => {
-        db.query("SELECT * FROM employee", (err, values) => {
-            if (err) {
-                throw err;
-            }
-            resolve(values);
-        })
-    })
+    base.findAllEmployees().then(([Emps]) => {
+        console.table(Emps)
+    }).then(() => mainMenu())
 };
 
-const addDepartment = () => {
+function addDepartment() {
     inquirer.prompt([
         {
             type: "input",
@@ -56,21 +36,22 @@ const addDepartment = () => {
             name: "departmentName"
         }
     ])
-    .then(function (res) {
-        const departmentName = res.departmentName;
-        const query = `INSERT INTO department (name) VALUES ("${departmentName}")`;
-        db.query(query, function (err, res) {
-            if (err) {
-                throw err;
-            } else {
-                console.table(res);
-                mainMenu();
-            }
+        .then(function (res) {
+            const departmentName = res.departmentName;
+            const query = `INSERT INTO department (name) VALUES ("${departmentName}")`;
+            db.query(query, function (err, res) {
+                if (err) {
+                    throw err;
+                } else {
+                    console.table(res);
+                    mainMenu();
+                }
+            })
         })
-    })
 };
 
 const addEmployee = () => {
+
     inquirer.prompt([
         {
             type: "input",
@@ -82,66 +63,101 @@ const addEmployee = () => {
             message: "Enter the employee's last name:",
             name: "lastName"
         },
-        {
-            type: "input",
-            message: "Enter the ID number for the employee's role:",
-            name: "addEmployeeRole"
-        },
-        {
-            type: "input",
-            message: "Enter the ID number of the employee's manager:",
-            name: "addEmployeeManager"
-        }
     ])
-    .then(function (res) {
-        const firstName = res.firstName;
-        const lastName = res.lastName;
-        const employeeRoleID = res.addEmployeeRole;
-        const employeeManagerID = res.addEmployeeManager;
-        const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${firstName}", "${lastName}", "${employeeRoleID}", "${employeeManagerID}")`;
-        db.query(query, function (err, res) {
-            if (err) {
-                throw err;
-            } else {
-                console.table(res);
-                mainMenu();
-            }
+        .then(function (res) {
+            const firstName = res.firstName;
+            const lastName = res.lastName;
+
+            base.findAllRoles().then(([roles]) => {
+                const roleChoices = roles.map(({ id, title }) => ({
+                    name: title,
+                    value: id
+                }))
+
+                inquirer.prompt([
+                    {
+                        type: "list",
+                        message: "Please select the users Role:",
+                        name: "addEmployeeRole",
+                        choices: roleChoices
+                    }
+                ]).then((data) => {
+                    const employeeRoleID = data.addEmployeeRole;
+
+                    base.findAllEmployees().then(([emps]) => {
+                        const managers = emps.map(({ id, first_name, last_name }) => ({
+                            name: `${first_name} ${last_name}`,
+                            value: id
+                        }));
+
+                        managers.unshift({name: "None", value: null})
+
+                        inquirer.prompt([
+                            {
+                                type: "list",
+                                message: "Please choose the employees Manager:",
+                                name: "addEmployeeManager",
+                                choices: managers
+                            }
+                        ]).then((res)=>{
+                            let employee= {
+                                manager_id: res.addEmployeeManager, 
+                                role_id: employeeRoleID,
+                                first_name: firstName, 
+                                last_name: lastName
+                            }
+
+
+                            base.createEmployee(employee).then(()=> mainMenu())
+                        })
+
+
+                    })
+                })
+            })
         })
-    })
 };
 
 const addRole = () => {
-    inquirer.prompt([
-        {
-            type: "input",
-            message: "Enter the title of the role:",
-            name: "roleName"
-        },
-        {
-            type: "input",
-            message: "Enter the annual salary for the role. Please use format '$00000.00':",
-            name: "rolePay"
-        },
-        {
-            type: "input",
-            message: "Enter the ID of the department for the role:",
-            name: "deptID"
-        }
-    ])
-    .then(function (res) {
-        const roleName = res.roleName;
-        const rolePay = res.rolePay;
-        const deptID = res.deptID;
-        const query = `INSERT INTO role (title, salary, department_id) VALUES ("${roleName}", "${rolePay}", "${deptID}")`;
-        db.query(query, function (err, res) {
+
+    new Promise((resolve) => {
+        db.query("SELECT * FROM department", (err, values) => {
             if (err) {
                 throw err;
-            } else {
-                console.table(res);
-                mainMenu();
             }
+            resolve(values);
         })
+    }).then((depts) => {
+        const departments = depts.map(({ id, name }) => ({
+            name: name,
+            value: id
+        }))
+
+        inquirer.prompt([
+            {
+                type: "input",
+                message: "Enter the title of the role:",
+                name: "title"
+            },
+            {
+                type: "input",
+                message: "Enter the annual salary for the role. Please use format '$00000.00':",
+                name: "salary"
+            },
+            {
+                type: "list",
+                message: "Choose Department",
+                name: "department_id",
+                choices: departments
+            }
+        ])
+            .then(function (res) {
+
+                base.createRole(res).then(() => mainMenu())
+
+            })
     })
+
 };
 
 const updateEmployeeRole = () => {
@@ -151,24 +167,25 @@ const updateEmployeeRole = () => {
             message: "Enter the ID number of the employee whose role you would like to update:",
             name: "currentID"
         },
-        {   type: "input",
+        {
+            type: "input",
             message: "Enter the ID number of the new role the employee will be transitioning to:",
             name: "newRoleID"
         }
     ])
-    .then(function (res) {
-        const currentID = res.currentID;
-        const newID = res.newRoleID;
-        const query = `UPDATE employee SET role_id = "${newID}" WHERE id = "${currentID}"`;
-        db.query(query, function (err, res) {
-            if (err) {
-                throw err;
-            } else {
-                console.table(res);
-                mainMenu();
-            }
+        .then(function (res) {
+            const currentID = res.currentID;
+            const newID = res.newRoleID;
+            const query = `UPDATE employee SET role_id = "${newID}" WHERE id = "${currentID}"`;
+            db.query(query, function (err, res) {
+                if (err) {
+                    throw err;
+                } else {
+                    console.table(res);
+                    mainMenu();
+                }
+            })
         })
-    })
 };
 
 const updateEmployeeManager = () => {
@@ -178,28 +195,29 @@ const updateEmployeeManager = () => {
             message: "Enter the ID number of the employee who will be transitioning to a new manager:",
             name: "currentID"
         },
-        {   type: "input",
+        {
+            type: "input",
             message: "Enter the ID number of the manager the employee will be transitioning to:",
             name: "newManagerID"
         }
     ])
-    .then(function (res) {
-        const currentID = res.currentID;
-        const newManagerID = res.newManagerID;
-        const query = `UPDATE employee SET manager_id = "${newManagerID}" WHERE id = "${currentID}"`;
-        db.query(query, function (err, res) {
-            if (err) {
-                throw err;
-            } else {
-                console.table(res);
-                mainMenu();
-            }
+        .then(function (res) {
+            const currentID = res.currentID;
+            const newManagerID = res.newManagerID;
+            const query = `UPDATE employee SET manager_id = "${newManagerID}" WHERE id = "${currentID}"`;
+            db.query(query, function (err, res) {
+                if (err) {
+                    throw err;
+                } else {
+                    console.table(res);
+                    mainMenu();
+                }
+            })
         })
-    })
 };
 
 // Main Menu
-const mainMenu = () => {
+function mainMenu() {
     inquirer.prompt([
         {
             type: 'list',
@@ -210,48 +228,36 @@ const mainMenu = () => {
         }
     ]).then(res => {
         switch (res.mainMenuOptions) {
-            case 'View All Departments': {
-                return viewDepartments();
-            }
-            case 'View All Roles': {
-                return viewRoles();
-            }
-            case 'View All Employees': {
-                return viewEmployees();
-            }
-            case 'Add Department': {
-                return addDepartment();
-            }
-            case 'Add Role': {
-                return addRole();
-            }
-            case 'Add Employee': {
-                return addEmployee();
-            }
-            case 'Update An Employee Role': {
-                return updateEmployeeRole();
-            }
-            case "Update An Employee's Manager": {
-                return updateEmployeeManager();
-            }
-            case 'Exit': {
+            case 'View All Departments':
+                getDepts()
+                break;
+            case 'View All Roles':
+                //viewRoles();
+                getRoles();
+                break;
+            case 'View All Employees':
+                //viewEmployees();
+                getEmployees()
+                break;
+            case 'Add Department':
+                addDepartment();
+                break;
+            case 'Add Role':
+                addRole();
+                break;
+            case 'Add Employee':
+                addEmployee();
+                break;
+            case 'Update An Employee Role':
+                updateEmployeeRole();
+                break;
+            case "Update An Employee's Manager":
+                updateEmployeeManager();
+                break;
+            default:
                 db.end();
-            }
+
         }
     }
-)};
-
-const viewDepartments = () => {
-    console.table(departments);
-    setTimeout(mainMenu, 400);
-};
-
-const viewRoles = () => {
-    console.table(roles);
-    setTimeout(mainMenu, 400);
-};
-
-const viewEmployees = () => {
-    console.table(employees);
-    setTimeout(mainMenu, 400);
+    )
 };
