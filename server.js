@@ -191,7 +191,7 @@ const updateEmployeeRole = () => {
                         }
                     ])
                     .then(function (res) {
-                    const currentID = res.updateEmployeeRole;
+                    const currentID = data.updateEmployeeRole;
                     const newID = res.selectNewRole;
                     const query = `UPDATE employee SET role_id = "${newID}" WHERE id = "${currentID}"`;
                     db.query(query, function (err, res) {
