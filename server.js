@@ -167,7 +167,6 @@ const updateEmployeeRole = () => {
                     role: role_id,
                     value: id
                 }))
-            
             inquirer.prompt([
                 {
                     type: "list",
@@ -175,8 +174,8 @@ const updateEmployeeRole = () => {
                     name: "updateEmployeeRole",
                     choices: employeeChoices
                 }
-            ]).then((data) => {
                 
+            ]).then((data) => {
                 base.findAllRoles().then(([roles]) => {
                     const roleChoices = roles.map(({ id, title }) => ({
                         name: title,
@@ -192,7 +191,7 @@ const updateEmployeeRole = () => {
                         }
                     ])
                     .then(function (res) {
-                    const currentID = employeeChoices;
+                    const currentID = res.updateEmployeeRole;
                     const newID = res.selectNewRole;
                     const query = `UPDATE employee SET role_id = "${newID}" WHERE id = "${currentID}"`;
                     db.query(query, function (err, res) {
