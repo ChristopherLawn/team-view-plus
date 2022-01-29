@@ -161,32 +161,53 @@ const addRole = () => {
 };
 
 const updateEmployeeRole = () => {
-    inquirer.prompt([
-        {
-            type: "input",
-            message: "Enter the ID number of the employee whose role you would like to update:",
-            name: "currentID"
-        },
-        {
-            type: "input",
-            message: "Enter the ID number of the new role the employee will be transitioning to:",
-            name: "newRoleID"
-        }
-    ])
-        .then(function (res) {
-            const currentID = res.currentID;
-            const newID = res.newRoleID;
-            const query = `UPDATE employee SET role_id = "${newID}" WHERE id = "${currentID}"`;
-            db.query(query, function (err, res) {
-                if (err) {
-                    throw err;
-                } else {
-                    console.table(res);
-                    mainMenu();
+            base.findAllEmployees().then(([emps]) => {
+                const employeeChoices = emps.map(({ id, first_name, last_name, role_id }) => ({
+                    name: `${first_name} ${last_name}`,
+                    role: role_id,
+                    value: id
+                }))
+            
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "Select the employee whose role you would like to update:",
+                    name: "updateEmployeeRole",
+                    choices: employeeChoices
                 }
-            })
+            ]).then((data) => {
+                
+                base.findAllRoles().then(([roles]) => {
+                    const roleChoices = roles.map(({ id, title }) => ({
+                        name: title,
+                        value: id
+                    }))
+                
+                    inquirer.prompt([
+                        {
+                            type: "list",
+                            message: "Please select the users role:",
+                            name: "selectNewRole",
+                            choices: roleChoices
+                        }
+                    ])
+                    .then(function (res) {
+                    const currentID = employeeChoices;
+                    const newID = res.selectNewRole;
+                    const query = `UPDATE employee SET role_id = "${newID}" WHERE id = "${currentID}"`;
+                    db.query(query, function (err, res) {
+                        if (err) {
+                            throw err;
+                        } else {
+                            console.table(res);
+                        mainMenu();
+                        }
+                    })
+                    })
+            });
         })
-};
+    }
+)};
 
 const updateEmployeeManager = () => {
     inquirer.prompt([
