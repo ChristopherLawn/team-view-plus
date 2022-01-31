@@ -27,22 +27,23 @@ Create and keep track of your employee database straight from the command line! 
 
 ## **Usage**
 1. Before using the app, check the connection settings in the `connection.js` file - located in the `db` folder
-2. Set up the seed files to populate your database. In Bash, log in to MySQL2 by:
-    * Typing the command `mysql -u <username> -p` then entering the password
-    * Run the following commands in order to run the sql seed files:
+2. Set up the seed files to populate your database:
+    * Navigate to the root directory in Bash:
+    * Log into MySQL by typing the command `mysql -u root -p` then entering the password
+    * Enter the following commands to run the SQL seed files:
         * `source db/db.sql;`
         * `source db/schema.sql;`
         * `source db/seeds.sql;`
-    * Once the seed files are initiated with error(s), run the command `quit;`
+    * Once the seed files are initiated without any error(s), run the command `quit;` to exit MySQL
     * Make sure to include a semicolon(`;`) at the end of each command
 3. Run the app from the command line in Bash by entering the code:
     `node server.js`.  This will initiate a series of prompts.
-4. Use the 'Up' and 'Down' arrows to navigate all list options.  Type in answers when adding new departments, roles, and employees.  ***NOTE: All input is case-sensitive, so it is recommended that you double-check all of your work before submitting each answer.***
-5. Type `Ctrl`+`c` to exit out of the app
-6. Please click the link below to watch the TeamView Plus Demo Video for more detailed instructions on navigating the interface menu
+4. Use the 'Up' and 'Down' arrows to navigate all list options. Type in answers when adding new information such as departments, roles, and employees.  ***NOTE: All input is case-sensitive, so it is recommended that you double-check all of your work before submitting each answer.***
+5. Select `Exit` from the Main Menu or type `Ctrl`+`c` to exit out of the app
+6. Click the link below to watch the TeamView Plus Demo Video for more detailed instructions on navigating the interface
 
 ## **Demo**
-['TeamView Plus' Demo Video](https://drive.google.com/file/d/1tlNsyJPGiYmZJczoGp0BHh43Xy6YH2SR/view?usp=sharing)
+['TeamView Plus' Demo Video](https://drive.google.com/file/d/1Z7DH3JH-P6zQh6Swt32TmEDfXSNNGUEX/view?usp=sharing)
 
 ## **License**
 The project is distributed under the [Creative Commons License](https://creativecommons.org/publicdomain/zero/1.0/)
