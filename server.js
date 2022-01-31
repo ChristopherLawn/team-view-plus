@@ -52,7 +52,6 @@ function mainMenu() {
                 break;
             default:
                 db.end();
-
         }
     }
     )
