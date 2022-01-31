@@ -12,7 +12,7 @@ function mainMenu() {
             type: 'list',
             name: 'mainMenuOptions',
             message: 'Welcome to TeamView Plus! What would you like to do?',
-            choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add Department', 'Add Role', 'Add Employee', 'Update An Employee Role', "Update An Employee's Manager", 'Delete A Department', 'Delete A Role', 'Delete An Employee', 'Exit'],
+            choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add A Department', 'Add A Role', 'Add An Employee', "Update An Employee's Role", "Update An Employee's Manager", 'Delete A Department', 'Delete A Role', 'Delete An Employee', 'Exit'],
             default: 'View All Departments'
         }
     ]).then(res => {
